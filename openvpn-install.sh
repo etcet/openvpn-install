@@ -18,11 +18,12 @@ if [ ! -e /dev/net/tun ]; then
 fi
 
 
-if [ ! -e /etc/debian_version ]; then
-	echo "Looks like you aren't running this installer on a Debian-based system"
+if [ ! -e /etc/redhat-release ]; then
+	echo "Looks like you aren't running this installer on a Redhat-based system"
 	exit
 fi
 
+OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 
 # Try to get our IP from the system and fallback to the Internet.
 # I do this to make the script compatible with NATed servers (lowendspirit.com)
@@ -60,7 +61,7 @@ if [ -e /etc/openvpn/server.conf ]; then
 			"$EASY_RSA/pkitool" $CLIENT
 			# Let's generate the client config
 			mkdir ~/ovpn-$CLIENT
-			cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf ~/ovpn-$CLIENT/$CLIENT.conf
+			cp /usr/share/doc/openvpn-$OPENVPN_VERSION/sample/sample-config-files/client.conf ~/ovpn-$CLIENT/$CLIENT.conf
 			cp /etc/openvpn/easy-rsa/2.0/keys/ca.crt ~/ovpn-$CLIENT
 			cp /etc/openvpn/easy-rsa/2.0/keys/$CLIENT.crt ~/ovpn-$CLIENT
 			cp /etc/openvpn/easy-rsa/2.0/keys/$CLIENT.key ~/ovpn-$CLIENT
@@ -130,9 +131,9 @@ else
 	echo ""
 	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now"
 	read -n1 -r -p "Press any key to continue..."
-	apt-get update
-	apt-get install openvpn iptables openssl -y
-	cp -R /usr/share/doc/openvpn/examples/easy-rsa/ /etc/openvpn
+	yum update
+	yum install openvpn iptables openssl -y
+	cp -R /usr/share/doc/openvpn/sample/easy-rsa/ /etc/openvpn
 	# easy-rsa isn't available by default for Debian Jessie and newer
 	if [ ! -d /etc/openvpn/easy-rsa/2.0/ ]; then
 		wget --no-check-certificate -O ~/easy-rsa.tar.gz https://github.com/OpenVPN/easy-rsa/archive/2.2.2.tar.gz
@@ -165,8 +166,7 @@ else
 	# DH params
 	. /etc/openvpn/easy-rsa/2.0/build-dh
 	# Let's configure the server
-	cd /usr/share/doc/openvpn/examples/sample-config-files
-	gunzip -d server.conf.gz
+	cd /usr/share/doc/openvpn-$OPENVPN_VERSION/sample/sample-config-files
 	cp server.conf /etc/openvpn/
 	cd /etc/openvpn/easy-rsa/2.0/keys
 	cp ca.crt ca.key dh2048.pem server.crt server.key /etc/openvpn
@@ -211,8 +211,8 @@ else
 	fi
 	# IP/port set on the default client.conf so we can add further users
 	# without asking for them
-	sed -i "s|remote my-server-1 1194|remote $IP $PORT|" /usr/share/doc/openvpn/examples/sample-config-files/client.conf
-	cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf ~/ovpn-$CLIENT/$CLIENT.conf
+	sed -i "s|remote my-server-1 1194|remote $IP $PORT|" /usr/share/doc/openvpn-$OPENVPN_VERSION/sample/sample-config-files/client.conf
+	cp /usr/share/doc/openvpn-$OPENVPN_VERSION/sample/sample-config-files/client.conf ~/ovpn-$CLIENT/$CLIENT.conf
 	cp /etc/openvpn/easy-rsa/2.0/keys/ca.crt ~/ovpn-$CLIENT
 	cp /etc/openvpn/easy-rsa/2.0/keys/$CLIENT.crt ~/ovpn-$CLIENT
 	cp /etc/openvpn/easy-rsa/2.0/keys/$CLIENT.key ~/ovpn-$CLIENT
