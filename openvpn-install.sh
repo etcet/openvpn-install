@@ -5,25 +5,20 @@
 # it will probably work if you simply want to setup a VPN on your Debian/Ubuntu
 # VPS. It has been designed to be as unobtrusive and universal as possible.
 
-
 if [ $USER != 'root' ]; then
 	echo "Sorry, you need to run this as root"
 	exit
 fi
-
 
 if [ ! -e /dev/net/tun ]; then
 	echo "TUN/TAP is not available"
 	exit
 fi
 
-
 if [ ! -e /etc/redhat-release ]; then
 	echo "Looks like you aren't running this installer on a Redhat-based system"
 	exit
 fi
-
-OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 
 # Try to get our IP from the system and fallback to the Internet.
 # I do this to make the script compatible with NATed servers (lowendspirit.com)
@@ -33,8 +28,8 @@ if [ "$IP" = "" ]; then
 		IP=$(wget -qO- ipv4.icanhazip.com)
 fi
 
-
 if [ -e /etc/openvpn/server.conf ]; then
+  OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 	while :
 	do
 	clear
@@ -131,8 +126,8 @@ else
 	echo ""
 	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now"
 	read -n1 -r -p "Press any key to continue..."
-	yum update
 	yum install openvpn iptables openssl -y
+  OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 	cp -R /usr/share/doc/openvpn/sample/easy-rsa/ /etc/openvpn
 	# easy-rsa isn't available by default for Debian Jessie and newer
 	if [ ! -d /etc/openvpn/easy-rsa/2.0/ ]; then
