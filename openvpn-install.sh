@@ -1,8 +1,8 @@
 #!/bin/bash
-# OpenVPN road warrior installer for Debian-based distros
+# OpenVPN road warrior installer for RHEL-based distros
 
-# This script will only work on Debian-based systems. It isn't bulletproof but
-# it will probably work if you simply want to setup a VPN on your Debian/Ubuntu
+# This script will only work on RHEL-based systems. It isn't bulletproof but
+# it will probably work if you simply want to setup a VPN on your RHEL/Ubuntu
 # VPS. It has been designed to be as unobtrusive and universal as possible.
 
 if [ $USER != 'root' ]; then
@@ -90,7 +90,7 @@ if [ -e /etc/openvpn/server.conf ]; then
 			exit
 			;;
 			3) 
-			apt-get remove --purge -y openvpn openvpn-blacklist
+			yum -y remove openvpn
 			rm -rf /etc/openvpn
 			rm -rf /usr/share/doc/openvpn
 			sed -i '/--dport 53 -j REDIRECT --to-port/d' /etc/rc.local
@@ -126,6 +126,7 @@ else
 	echo ""
 	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now"
 	read -n1 -r -p "Press any key to continue..."
+	rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 	yum install openvpn iptables openssl -y
   OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 	cp -R /usr/share/doc/openvpn/sample/easy-rsa/ /etc/openvpn
