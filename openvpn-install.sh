@@ -20,16 +20,16 @@ if [ ! -e /etc/redhat-release ]; then
 	exit
 fi
 
+IP=$(wget -qO- ipv4.icanhazip.com)
 # Try to get our IP from the system and fallback to the Internet.
 # I do this to make the script compatible with NATed servers (lowendspirit.com)
 # and to avoid getting an IPv6.
-IP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1)
 if [ "$IP" = "" ]; then
-		IP=$(wget -qO- ipv4.icanhazip.com)
+	exit "IP not available"
 fi
 
 if [ -e /etc/openvpn/server.conf ]; then
-  OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
+	OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 	while :
 	do
 	clear
@@ -128,7 +128,7 @@ else
 	read -n1 -r -p "Press any key to continue..."
 	rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
 	yum install openvpn iptables openssl -y
-  OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
+	OPENVPN_VERSION=$(openvpn --version | awk '{print $2}' | head -n1)
 	cp -R /usr/share/doc/openvpn/sample/easy-rsa/ /etc/openvpn
 	# easy-rsa isn't available by default for Debian Jessie and newer
 	if [ ! -d /etc/openvpn/easy-rsa/2.0/ ]; then
@@ -187,8 +187,9 @@ else
 	# Set iptables
 	iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j SNAT --to $IP
 	sed -i "/# By default this script does nothing./a\iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -j SNAT --to $IP" /etc/rc.local
-	# And finally, restart OpenVPN
-	/etc/init.d/openvpn restart
+	# And finally, restart and enable OpenVPN
+	systemctl restart openvpn@server
+	systemctl enable openvpn@server
 	# Let's generate the client config
 	mkdir ~/ovpn-$CLIENT
 	# Try to detect a NATed connection and ask about it to potential LowEndSpirit
